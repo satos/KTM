@@ -1,0 +1,807 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="ja">
+<HEAD>
+ <META http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+ <META http-equiv="Content-Style-Type" content="text/css">
+ <TITLE>華和梨汎用タスク管理システム KTM(KawariTaskManager)</TITLE>
+<STYLE type="text/css">
+<!--
+BODY { margin: 0px; padding: 1ex 1em 3ex 1em; line-height: 140%; }
+BLOCKQUOTE { margin: 1ex 2em 1ex 2em; }
+P { margin: 1.5ex 1em 1.5ex 1em; padding: 0px; }
+H1 {
+	margin: 1ex 0px 2ex 0px; padding: 0.2ex 0em 0.2ex 1em;
+	border-style: solid; border-width: 1px 12px 1px 12px; border-color: blue;
+	font-weight: bold; font-size: large; font-family: Helvetica, sans-serif;
+}
+H2 {
+	margin: 3ex 0px 1ex 0px; padding: 0.3ex 0px 0.3ex 1em;
+	background: #0000aa; color: white;
+	font-weight: bold; font-size: medium; font-family: Helvetica, sans-serif;
+}
+H3 {
+	margin: 3ex 0px 1ex 0px; padding: 0px 0px 0.1ex 1em;
+	border-width: 0 0 2px 0; border-style: solid; border-color: #30c030;
+	font-weight: bold; font-size: medium; font-family: Helvetica, sans-serif;
+}
+H4 {
+	margin: 3ex 0em 1ex 0em; padding: 0px 0px 0.3ex 1em;
+	font-weight: bold; font-size: 100%; font-family: Helvetica, sans-serif;
+}
+
+PRE {
+	padding: 1ex 1em 1ex 2em; margin: 1ex 2em 1ex 2em; text-indent: 0px;
+	line-height: 110%;
+	border-width: 1px; border-style: solid; border-color: black;
+	font-family: monospace; font-size: medium;
+}
+.tt { font-family: monospace; }
+
+/*
+ テーブルとリスト
+ */
+TABLE{ margin: 1ex 0em 1ex 0em; }
+CAPTION{ padding: 8px 0em 0ex 2em; font-weight: bold; text-allign: left; }
+TD { vertical-align: top; text-align: left; }
+DL{ margin-left: 5%; }
+DL DT { margin-left: 2em; }
+DL DD { margin-left: 5em; }
+
+TR.genre{ font-style: italic; text-indent: 1em; }
+TR.gb{ background: lightgrey; }
+
+/*
+ アンカー
+ */
+A { text-decoration: none; }
+A:link { color: #ff7070; }
+A:visited { color: #ff7070; }
+A:hover { color: orange; text-decoration: underline; }
+A:active { background: crimson; color: white; }
+
+/*
+ 強調とマーキング
+ */
+EM { font-style: italic; color: red; padding-right: 0.5em; padding-right: 0.5em; }
+ -->
+</STYLE>
+</HEAD>
+<BODY>
+<h1>華和梨汎用タスク管理システム KTM(KawariTaskManager)</h1>
+<ul>
+<li> <a href="#i0">中枢部::タスク管理
+</a></li>
+<ul>
+<li> <a href="#i1">Tick
+
+</a></li>
+<li> <a href="#i2">StopTask
+</a></li>
+<li> <a href="#i3">DeleteTask
+</a></li>
+<li> <a href="#i4">CreateTask
+</a></li>
+<li> <a href="#i5">RunTask
+</a></li>
+<li> <a href="#i6">ChangeTaskRank
+</a></li>
+<li> <a href="#i7">ReferTaskRank
+
+</a></li>
+</ul>
+<li> <a href="#i8">サービス::タスクリスト
+</a></li>
+<ul>
+<li> <a href="#i9">Tasklist
+</a></li>
+<li> <a href="#i10">Activetasklist
+</a></li>
+</ul>
+<li> <a href="#i11">サービス::Mutex
+</a></li>
+<ul>
+
+<li> <a href="#i12">CreateMutex
+</a></li>
+<li> <a href="#i13">LockMutex
+</a></li>
+<li> <a href="#i14">ReleaseMutex
+</a></li>
+<li> <a href="#i15">ReferMutex
+</a></li>
+</ul>
+<li> <a href="#i16">サービス::Semaphore
+</a></li>
+<ul>
+
+<li> <a href="#i17">CreateSemaphore
+</a></li>
+<li> <a href="#i18">GetSemaphore
+</a></li>
+<li> <a href="#i19">ReleaseSemaphore
+</a></li>
+<li> <a href="#i20">ReferSemaphore
+</a></li>
+</ul>
+<li> <a href="#i21">サービス::タスクローカルエントリ
+</a></li>
+<ul>
+
+<li> <a href="#i22">Local
+</a></li>
+</ul>
+<li> <a href="#i23">サービス::メール
+</a></li>
+<ul>
+<li> <a href="#i24">PostMail
+</a></li>
+<li> <a href="#i25">GetMailNo
+</a></li>
+<li> <a href="#i26">GetMailMessage
+</a></li>
+
+<li> <a href="#i27">GetMailSender
+</a></li>
+<li> <a href="#i28">GetMailTimestamp
+</a></li>
+<li> <a href="#i29">DeleteMail
+</a></li>
+</ul>
+<li> <a href="#i30">サービス::ファイルI/O
+</a></li>
+<ul>
+<li> <a href="#i31">SaveState
+</a></li>
+
+</ul>
+<li> <a href="#i32">サービス::タイマ補助用
+</a></li>
+<ul>
+<li> <a href="#i33">Interval
+</a></li>
+<li> <a href="#i34">ResetTimer
+</a></li>
+<li> <a href="#i35">OnTime
+</a></li>
+</ul>
+<li> <a href="#i36">付録:システム構造
+
+</a></li>
+<ul>
+<li> <a href="#i37">エントリツリー構造
+</a></li>
+<li> <a href="#i38">コマンド群
+</a></li>
+<li> <a href="#i39">メッセージ
+</a></li>
+</ul>
+</ul>
+<p>
+</p>
+<h2><a name="i0"> </a>中枢部::タスク管理
+
+</h2>
+<p>
+</p>
+<h3><a name="i1"> </a>Tick
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    毎時処理
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i2"> </a>StopTask
+</h3>
+
+<p>
+</p>
+<ul>
+<li>機能:    タスク停止
+</li>
+<li>第1引数: tid
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i3"> </a>DeleteTask
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    タスク削除
+
+</li>
+<li>第1引数: tid
+</li>
+<li>備考1:   デストラクタがあれば実行
+</li>
+<li>備考2:   タスクローカルエントリ空間を削除
+</li>
+<li>備考3:   占有するミューテックス、セマフォを解放
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i4"> </a>CreateTask
+</h3>
+<p>
+</p>
+
+<ul>
+<li>機能:    タスク生成
+</li>
+<li>第1引数: タスク名
+</li>
+<li>第2引数: condを記したエントリ名
+</li>
+<li>第3引数: procを記したエントリ名
+</li>
+<li>第4引数: 優先順位(0～4)、省略時は「2」、小さいほど優先順位が上
+</li>
+<li>第5引数: コンストラクタを記したエントリ名、省略可能
+</li>
+<li>第6引数: デストラクタを記したエントリ名、省略可能
+</li>
+<li>戻り値:  tid
+</li>
+
+<li>備考1:   コンストラクタがあれば実行
+</li>
+<li>備考2:   第2引数に「CYCLE=???」で、???秒ごとに発動
+</li>
+<li>備考3:   第2引数に「TIME=???」で、Epocからの経過秒数が???の時に単発発動
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i5"> </a>RunTask
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    タスクの実行開始
+</li>
+
+<li>第1引数: tid
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i6"> </a>ChangeTaskRank
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    タスクの優先順位変更
+</li>
+<li>第1引数: tid
+</li>
+<li>第2引数: 優先順位(0～4)
+</li>
+
+</ul>
+<p>
+</p>
+<h3><a name="i7"> </a>ReferTaskRank
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    タスクの優先順位参照
+</li>
+<li>第1引数: tid
+</li>
+</ul>
+<p>
+</p>
+<h2><a name="i8"> </a>サービス::タスクリスト
+
+</h2>
+<p>
+</p>
+<h3><a name="i9"> </a>Tasklist
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    タスクのリストを返す
+</li>
+<li>戻り値:  「[tid]/[タスク名](|...)」形式のタスクリスト
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i10"> </a>Activetasklist
+
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    実行中のタスクのリストを返す
+</li>
+戻り値:  「[tid]/[タスク名](|...)」形式の実行中タスクリスト
+</ul>
+<p>
+</p>
+<h2><a name="i11"> </a>サービス::Mutex
+</h2>
+<p>
+</p>
+<h3><a name="i12"> </a>CreateMutex
+
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    Mutex生成
+</li>
+<li>第1引数: 生成するMutex名
+</li>
+<li>戻り値:  成功すれば真、失敗すれば無し
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i13"> </a>LockMutex
+</h3>
+<p>
+
+</p>
+<ul>
+<li>機能:    Mutexのロック
+</li>
+<li>第1引数: Mutex名
+</li>
+<li>戻り値:  成功すれば真、失敗すれば無し
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i14"> </a>ReleaseMutex
+</h3>
+<p>
+</p>
+<ul>
+
+<li>機能:    Mutexの解放
+</li>
+<li>第1引数: Mutex名
+</li>
+<li>戻り値:  成功すれば真、失敗すれば無し
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i15"> </a>ReferMutex
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    Mutexの参照
+</li>
+
+<li>第1引数: Mutex名
+</li>
+<li>戻り値:  Mutexが存在すれば所有するtask id or -1、失敗すれば無し
+</li>
+</ul>
+<p>
+</p>
+<h2><a name="i16"> </a>サービス::Semaphore
+</h2>
+<p>
+</p>
+<h3><a name="i17"> </a>CreateSemaphore
+</h3>
+<p>
+</p>
+
+<ul>
+<li>機能:    Semaphore生成
+</li>
+<li>第1引数: 生成するSemaphore名
+</li>
+<li>第2引数: 最大セマフォカウント(省略時は1)
+</li>
+<li>戻り値:  成功すれば真、失敗すれば無し
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i18"> </a>GetSemaphore
+</h3>
+<p>
+</p>
+
+<ul>
+<li>機能:    Semaphoreの獲得
+</li>
+<li>第1引数: Semaphore名
+</li>
+<li>戻り値:  成功すれば真、失敗すれば無し
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i19"> </a>ReleaseSemaphore
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    Semaphoreの解放
+
+</li>
+<li>第1引数: Semaphore名
+</li>
+<li>戻り値:  成功すれば真、失敗すれば無し
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i20"> </a>ReferSemaphore
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    Semaphoreの参照
+</li>
+<li>第1引数: Semaphore名
+
+</li>
+<li>戻り値:  Semaphoreが存在すればセマフォカウント、存在しなければ無し
+</li>
+</ul>
+<p>
+</p>
+<h2><a name="i21"> </a>サービス::タスクローカルエントリ
+</h2>
+<p>
+</p>
+<h3><a name="i22"> </a>Local
+</h3>
+<p>
+</p>
+<ul>
+
+<li>機能:    タスクローカルエントリ名を返す
+</li>
+<li>第1引数: ローカルエントリ名
+</li>
+<li>戻り値:  tidがあれば真のエントリ名、なければ&quot;&quot;
+</li>
+</ul>
+<p>
+</p>
+<h2><a name="i23"> </a>サービス::メール
+</h2>
+<p>
+</p>
+<h3><a name="i24"> </a>PostMail
+
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    メールを投函する
+</li>
+<li>第1引数: 投函する先のmailbox名
+</li>
+<li>第2引数: メッセージ内容
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i25"> </a>GetMailNo
+</h3>
+<p>
+
+</p>
+<ul>
+<li>機能:    メール件数を返す
+</li>
+<li>第1引数: mailbox名
+</li>
+<li>戻り値: メールの件数
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i26"> </a>GetMailMessage
+</h3>
+<p>
+</p>
+<ul>
+
+<li>機能:    メールのメッセージを読む
+</li>
+<li>第1引数: mailbox名
+</li>
+<li>第2引数: 読むメールの番号(省略時は0番)
+</li>
+<li>戻り値:  メールのメッセージ
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i27"> </a>GetMailSender
+</h3>
+<p>
+</p>
+<ul>
+
+<li>機能:    メールの送信者を読む
+</li>
+<li>第1引数: mailbox名
+</li>
+<li>第2引数: 読むメールの番号(省略時は0番)
+</li>
+<li>戻り値:  メールを送ってきたtask id
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i28"> </a>GetMailTimestamp
+</h3>
+<p>
+</p>
+<ul>
+
+<li>機能:    メールの送信時刻を読む
+</li>
+<li>第1引数: mailbox名
+</li>
+<li>第2引数: 読むメールの番号(省略時は0番)
+</li>
+<li>戻り値:  メールの送信された時刻(Epocからの経過秒数)
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i29"> </a>DeleteMail
+</h3>
+<p>
+</p>
+<ul>
+
+<li>機能:    メールの削除
+</li>
+<li>第1引数: mailbox名
+</li>
+<li>第2引数: 削除するメールの番号(省略時は0番)
+</li>
+</ul>
+<p>
+</p>
+<h2><a name="i30"> </a>サービス::ファイルI/O
+</h2>
+<p>
+</p>
+<h3><a name="i31"> </a>SaveState
+</h3>
+
+<p>
+</p>
+<ul>
+<li>機能:    状態をファイルに保存
+</li>
+<li>第1引数: 保存するファイル名
+</li>
+</ul>
+<p>
+</p>
+<h2><a name="i32"> </a>サービス::タイマ補助用
+</h2>
+<p>
+</p>
+<h3><a name="i33"> </a>Interval
+
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    設定周期経過していた場合、真を返す
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i34"> </a>ResetTimer
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    基準時刻を現在に再設定する
+</li>
+
+</ul>
+<p>
+</p>
+<h3><a name="i35"> </a>OnTime
+</h3>
+<p>
+</p>
+<ul>
+<li>機能:    設定時刻を過ぎた場合、真を返し自タスクを停止する
+</li>
+</ul>
+<p>
+</p>
+<h2><a name="i36"> </a>付録:システム構造
+</h2>
+
+<p>
+</p>
+<h3><a name="i37"> </a>エントリツリー構造
+</h3>
+<p>
+</p>
+<ul>
+<li>KTM.API.[function] : フレームワークコマンド群の実体
+</li>
+<li>KTM.NULL : 何もしない
+</li>
+<li>KTM.TRUE : 常に真
+</li>
+<li>KTM.INTERVAL : タスク固有の一定周期で真
+</li>
+<li>KTM.ONTIME : タスク固有の時刻(以上)で真
+
+</li>
+<li>KTM.RESETTIMER : タスク固有のタイマー初期化
+</li>
+<li>KTM.SYSMAIL.* : メールボックス「SYSTEM」に届いたメールの処理部
+</li>
+<li>KTM.SYSMAIL : メールボックス「SYSTEM」に届いたメール処理部一覧
+</li>
+<li>KTM.sysmailparam : メールボックス「SYSTEM」に届いたメールのパラメータ部
+</li>
+<li>KTM.activetask : Run状態のtask idのリスト(idのみでprefixは無い)
+</li>
+<li>KTM.alivetask  : 起動済のtask idのリスト(idのみでprefixは無い)
+</li>
+<li>KTM.taskcount  : task idカウンタ
+</li>
+<li>KTM.tid: 実行中のtask id
+</li>
+
+<li>KTM.task.* : タスクツリー
+</li>
+<ul>
+<li>KTM.task.[tid].cond : タスクの実行条件を記したエントリ名
+</li>
+<li>KTM.task.[tid].proc : タスクの実行を記したエントリ名
+</li>
+<li>KTM.task.[tid].name : タスクの名前
+</li>
+<li>KTM.task.[tid].rank : タスクの優先順位(0-4)
+</li>
+<li>KTM.task.[tid].init : タスクのコンストラクタを記したエントリ名
+</li>
+<li>KTM.task.[tid].quit : タスクのデストラクタを記したエントリ名
+</li>
+<li>KTM.task.[tid].pmtx : タスクの占有するミューテックス名(複数可)
+</li>
+
+<li>KTM.task.[tid].psem : タスクの占有するセマフォ名(複数可)
+</li>
+<li>KTM.task.[tid].time : タスクのカウント開始時刻
+</li>
+<li>KTM.task.[tid].cycle : タスクの発動周期
+</li>
+<li>KTM.task.[tid].ns.[entry name] : タスクローカルエントリ空間
+</li>
+</ul>
+<li>KTM.mutex.[mutex name] : mutex、ロックされていればtask id、なければ-1
+</li>
+<li>KTM.semaphore.[semaphore name] : セマフォカウント
+</li>
+<li>KTM.semaphore.[semaphore name].limit : セマフォのリソース上限
+</li>
+<li>KTM.semaphore.[semaphore name].tid : 該当セマフォを占有中のtask id(複数可)
+</li>
+
+<li>KTM.mbox.[mbox name] : メールボックス
+</li>
+</ul>
+<p>
+</p>
+<h3><a name="i38"> </a>コマンド群
+</h3>
+<p>
+</p>
+<ul>
+<li>KTM.Tick             : 毎時ごとの処理
+</li>
+<li>KTM.StopTask         : タスクを停止する
+</li>
+<li>KTM.DeleteTask       : タスクを削除する
+</li>
+
+<li>KTM.CreateTask       : タスクを生成する
+</li>
+<li>KTM.RunTask          : タスクを起動する
+</li>
+<li>KTM.ChangeTaskRank   : タスクの優先順位を変更する
+</li>
+<li>KTM.ReferTaskRank    : タスクの優先順位を参照する
+</li>
+<li>KTM.Tasklist         : 存在するタスクリストを返す
+</li>
+<li>KTM.Activetasklist   : 起動中のタスクリストを返す
+</li>
+<li>KTM.CreateMutex      : ミューテックスを生成する
+</li>
+<li>KTM.LockMutex        : ミューテックスをロックする
+</li>
+<li>KTM.ReleaseMutex     : ミューテックスを解放する
+
+</li>
+<li>KTM.ReferMutex       : ミューテックスを参照する
+</li>
+<li>KTM.CreateSemaphore  : セマフォを生成する
+</li>
+<li>KTM.GetSemaphore     : セマフォを獲得する
+</li>
+<li>KTM.ReleaseSemaphore : セマフォを解放する
+</li>
+<li>KTM.ReferSemaphore   : セマフォを参照する
+</li>
+<li>KTM.Local            : タスクローカルエントリ名を返す
+</li>
+<li>KTM.PostMail         : メールを投函する
+</li>
+<li>KTM.GetMailNo        : 届いているメール総数を返す
+</li>
+
+<li>KTM.GetMailMessage   : メールのメッセージを読む
+</li>
+<li>KTM.GetMailSender    : メールの送信者を読む
+</li>
+<li>KTM.GetMailTimestamp : メールの送信時刻を読む
+</li>
+<li>KTM.DeleteMail       : メールを削除する
+</li>
+<li>KTM.SaveState        : 状態をファイルに保存
+</li>
+<li>KTM.Interval         : 周期的実行条件記述用
+</li>
+<li>KTM.OnTime           : 特定時刻単発実行条件記述用
+</li>
+</ul>
+<p>
+</p>
+
+<h3><a name="i39"> </a>メッセージ
+</h3>
+<ul>
+<li>M_RUN      [tid] : 指定タスクの実行開始を要求
+</li>
+<li>M_STOP     [tid] : 指定タスクの停止を要求
+</li>
+<li>M_DEL      [tid] : 指定タスクを削除を要求
+</li>
+<li>M_LCK_MTX  [mtx] : 指定ミューテックスのロックを要求、要求tid権限
+</li>
+<li>M_RLS_MTX  [mtx] : 指定ミューテックスの解放を要求、要求tidが所有なら実行
+</li>
+<li>M_GET_SEM  [sem] : 指定セマフォの獲得を要求、要求tid権限
+</li>
+<li>M_RLS_SEM  [sem] : 指定セマフォの解放を要求、要求tidが所有なら実行
+
+</li>
+<li>M_EXE_PRC  [prc] : プロシージャ(エントリ)実行を要求、要求tid権限
+</li>
+<li>M_EXE_SELF       : 自タスク実行を要求、要求tid権限
+</li>
+<li>M_MSG      [msg] : 汎用メッセージ伝達
+</li>
+</ul>
+<p>
+</p>
+<p>
+</p><hr>
+</body>
+</html>

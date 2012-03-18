@@ -1,0 +1,38 @@
+#==============================================================================
+# スクリプトファイルからドキュメント生成するコマンド「MakeDoc」
+#
+# 使い方: $(MakeDoc <変換元ファイル名> <変換後ファイル名>)
+# 機能:   入力中の「#==」か#--」に囲まれた部分を、行頭の「#」を除いて出力する
+# 備考:   「#」を除いた後の行頭の空白文字は無視される
+#
+#==============================================================================
+
+=kis
+function MakeDoc $(
+	if $[ $(size @arg) != 3 ] $(return);
+
+	textload @src $@arg[1];
+	setstr @sw 0;
+
+	foreach @line @src $(
+		setstr @l $(SkipSpace ${@line});
+		if $[ $(match_at ${@l} "#==") || $(match_at ${@l} "#--") ] $(
+			setstr @sw $[ 1-${@sw} ];
+			if $[ ! ${@sw} ] $(pushstr @dst "");
+			continue;
+		);
+		if ${@sw} $(
+			pushstr @dst $(SkipSpace $(substr ${@l} 1));
+		);
+	);
+
+	textsave $@arg[2] @dst;
+);
+
+function SkipSpace $(
+	if $[ $(size @arg) != 2 ] $(return);
+	setstr @p 0;
+	while $[ " 	" =~ $(char_at $@arg[1] ${@p}) && ${@p} < $(length $@arg[1]) ] $(inc @p);
+	return $(substr $@arg[1] ${@p});
+);
+=end

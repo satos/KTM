@@ -1,0 +1,117 @@
+# KTMの実装テストラン スクリプト その2
+# ktm-kernel.kisをロード後、読み込みのこと。
+
+#------------------------------------------------------------------------------
+# もっとも基本的なゴーストに組み込み方法
+#------------------------------------------------------------------------------
+# OnSecondChangeイベントごとに呼ぶ。
+# これで毎秒、タスクが優先順位ソート後実行される。
+# トーク類は基本的に無いので、フラグ管理機構として使うか、トークは
+# トークキューを通じて発する。
+event.OnSecondChange : $(KTM.Tick)
+
+
+#------------------------------------------------------------------------------
+# タスク1
+#------------------------------------------------------------------------------
+
+# タスク1の発動条件
+test1.cond : $[ ${$(KTM.Local a)} >= 3 ]
+# タスク1の本体
+test1.proc : $(
+	logprint "test1:rank="$(KTM.ReferTaskRank ${KTM.tid})"/a="${$(KTM.Local a)};
+	# セマフォ「Kawari」の獲得
+	if $(KTM.GetSemaphore Kawari) $(
+		logprint "      Success sem(Kawari)="$(KTM.ReferSemaphore Kawari);
+	) else $(
+		logprint "      Fail sem(Kawari)="$(KTM.ReferSemaphore Kawari);
+	);
+	# タスクローカルエントリをカウンタとして使用
+	dec $(KTM.Local a);
+	# システムへのメッセージ発行テスト
+	if $[ ${$(KTM.Local a)} < 5 ] $(
+		KTM.PostMail "SYSTEM" "M_STOP" ${KTM.tid};
+	);
+	# エントリ呼び出しを行うメッセージを発行
+	KTM.PostMail "SYSTEM" "M_EXE_PRC" "test.log";
+)
+# タスク1の優先順位
+test1.rank : 4
+
+# タスク1のコンストラクタ
+test1.init : $(
+	# ミューテックス「Sakura」を生成、占有
+	KTM.CreateMutex Sakura;
+	KTM.LockMutex Sakura;
+	# セマフォ「Kawari」を生成
+	KTM.CreateSemaphore Kawari 4;
+	# タスクローカルエントリ「a」に初期値「10」を代入
+	setstr $(KTM.Local a) 10;
+	#タスク IDは「KTM.tid」エントリに格納されている
+	logprint "Task id="${KTM.tid}"/test1 Created./a="${$(KTM.Local a)};
+)
+# タスク1のデストラクタ
+# タスク状態を「coredump.kis」ファイルに出力
+test1.quit : $(KTM.SaveState coredump.kis)
+
+
+#------------------------------------------------------------------------------
+# タスク2
+#------------------------------------------------------------------------------
+test2.proc : $(
+	logprint "test2: rank="$(KTM.ReferTaskRank ${KTM.tid});
+	# セマフォ「Kawari」の獲得
+	if $(KTM.GetSemaphore Kawari) $(
+		logprint "      Success sem(Kawari)="$(KTM.ReferSemaphore Kawari);
+	) else $(
+		logprint "      Fail sem(Kawari)="$(KTM.ReferSemaphore Kawari);
+	);
+	# エントリ呼び出しを行うメッセージを発行
+	KTM.PostMail "SYSTEM" "M_EXE_PRC" "test.log";
+)
+test2.rank : 1
+
+# メッセージから呼び出されるエントリ
+test.log : $(logprint "#   check MaiBox 'SYSTEM' in "${KTM.tid})
+
+
+#------------------------------------------------------------------------------
+# タスク3
+#------------------------------------------------------------------------------
+# 一定周期ごとに発生するタスク
+# OpenKEEPSに組み込んで使う場合のサンプル。
+# タスク本体でOpenKEEPSのLogMsgコマンドを使っている。
+test3.proc : $(LogMsg "24sec loop!")
+test3.init : $(LogMsg "24sec loop count start!")
+test3.rank : 4
+
+
+#------------------------------------------------------------------------------
+# タスク4
+#------------------------------------------------------------------------------
+# 一度だけ発動するタスク
+# OpenKEEPSに組み込んで使う場合のサンプル。
+# タスク本体でOpenKEEPSのLogMsgコマンドを使っている。
+test4.proc : $(LogMsg "60seconds passed from boot!")
+test4.init : $(LogMsg "Oneshot timer created!")
+
+
+#------------------------------------------------------------------------------
+# タスクの生成、実行
+#------------------------------------------------------------------------------
+=kis
+KTM.RunTask $(KTM.CreateTask "テストタスク" test1.cond test1.proc test1.rank test1.init test1.quit);
+KTM.RunTask $(KTM.CreateTask "テストその2" KTM.TRUE test2.proc test2.rank);
+
+# 「CYCLE=???」で、???秒ごとにタスクを発動する
+setstr Timer1 $(KTM.CreateTask "タイマー1" CYCLE=24 test3.proc test3.rank test3.init);
+# 「TIME=???」で、1970/1/1 0:00:00からの経過秒数が???の時にタスクを発動する
+setstr Timer2 $(KTM.CreateTask "タイマー2" TIME=$[ $(.date %s) + 60 ] test4.proc test4.init);
+=end
+
+System.Callback.OnLoad : $(
+	# 辞書読み込み完了後、タスクを起動。カウントスタートはこの瞬間から。
+	KTM.RunTask ${Timer1};
+	KTM.RunTask ${Timer2};
+)
+

@@ -1,0 +1,124 @@
+# KTMの実装テストラン スクリプト
+# ktm-kernel.kisをロード後、読み込みのこと。
+
+#------------------------------------------------------------------------------
+# タスク1
+#------------------------------------------------------------------------------
+
+# タスク1の発動条件
+test1.cond : $[ ${$(KTM.Local a)} >= 3 ]
+# タスク1の本体
+test1.proc : $(
+	logprint "test1:rank="$(KTM.ReferTaskRank ${KTM.tid})"/a="${$(KTM.Local a)};
+	# セマフォ「Kawari」の獲得
+	if $(KTM.GetSemaphore Kawari) $(
+		logprint "      Success sem(Kawari)="$(KTM.ReferSemaphore Kawari);
+	) else $(
+		logprint "      Fail sem(Kawari)="$(KTM.ReferSemaphore Kawari);
+	);
+	# タスクローカルエントリをカウンタとして使用
+	dec $(KTM.Local a);
+	# システムへのメッセージ発行テスト
+	if $[ ${$(KTM.Local a)} < 5 ] $(
+		KTM.PostMail "SYSTEM" "M_STOP" ${KTM.tid};
+	);
+	# エントリ呼び出しを行うメッセージを発行
+	KTM.PostMail "SYSTEM" "M_EXE_PRC" "test.log";
+)
+# タスク1の優先順位
+test1.rank : 4
+
+# タスク1のコンストラクタ
+test1.init : $(
+	# ミューテックス「Sakura」を生成、占有
+	KTM.CreateMutex Sakura;
+	KTM.LockMutex Sakura;
+	# セマフォ「Kawari」を生成
+	KTM.CreateSemaphore Kawari 4;
+	# タスクローカルエントリ「a」に初期値「10」を代入
+	setstr $(KTM.Local a) 10;
+	#タスク IDは「KTM.tid」エントリに格納されている
+	logprint "Task id="${KTM.tid}"/test1 Created./a="${$(KTM.Local a)};
+)
+# タスク1のデストラクタ
+# タスク状態を「coredump.kis」ファイルに出力
+test1.quit : $(KTM.SaveState coredump.kis)
+
+
+#------------------------------------------------------------------------------
+# タスク2
+#------------------------------------------------------------------------------
+test2.proc : $(
+	logprint "test2: rank="$(KTM.ReferTaskRank ${KTM.tid});
+	# セマフォ「Kawari」の獲得
+	if $(KTM.GetSemaphore Kawari) $(
+		logprint "      Success sem(Kawari)="$(KTM.ReferSemaphore Kawari);
+	) else $(
+		logprint "      Fail sem(Kawari)="$(KTM.ReferSemaphore Kawari);
+	);
+	# エントリ呼び出しを行うメッセージを発行
+	KTM.PostMail "SYSTEM" "M_EXE_PRC" "test.log";
+)
+test2.rank : 1
+
+# メッセージから呼び出されるエントリ
+test.log : $(logprint "#   check MaiBox 'SYSTEM' in "${KTM.tid})
+
+
+#------------------------------------------------------------------------------
+# タスクの生成、実行
+#------------------------------------------------------------------------------
+=kis
+# Create時にコンストラクタが実行される
+KTM.RunTask $(KTM.CreateTask "テストタスク" test1.cond test1.proc test1.rank test1.init test1.quit);
+KTM.RunTask $(KTM.CreateTask "テストその2" KTM.TRUE test2.proc test2.rank);
+=end
+
+#------------------------------------------------------------------------------
+# テストラン
+#------------------------------------------------------------------------------
+=kis
+logprint "# Task      : "$(KTM.Tasklist);
+logprint "# ActiveTask: "$(KTM.Activetasklist);
+logprint "";
+
+logprint "# TestRun start";
+loop 20 $(logprint "# Loop1-"${-1}: ; KTM.Tick);
+logprint "";
+
+setstr @null $(KTM.StopTask 0);
+logprint "# Stop test0";
+logprint "# Task      : "$(KTM.Tasklist);
+logprint "# ActiveTask: "$(KTM.Activetasklist);
+logprint "";
+
+loop 20 $(logprint "# Loop2-"${-1}: ; KTM.Tick);
+logprint "";
+
+setstr @null $(KTM.RunTask 0);
+logprint "# Restart test0";
+logprint "# Task      : "$(KTM.Tasklist);
+logprint "# ActiveTask: "$(KTM.Activetasklist);
+logprint "";
+
+loop 20 $(logprint "# Loop3-"${-1}: ; KTM.Tick);
+logprint "";
+
+setstr @null $(KTM.DeleteTask 0);
+logprint "# Delete test0";
+logprint "# Task      : "$(KTM.Tasklist);
+logprint "# ActiveTask: "$(KTM.Activetasklist);
+logprint "";
+
+loop 20 $(logprint "# Loop4-"${-1}: ; KTM.Tick);
+logprint "";
+
+setstr @null $(KTM.DeleteTask 1);
+logprint "# Delete test1";
+logprint "# Task      : "$(KTM.Tasklist);
+logprint "# ActiveTask: "$(KTM.Activetasklist);
+logprint "";
+KTM.SaveState coredump2.kis;
+
+logprint "# TestRun end";
+=end
